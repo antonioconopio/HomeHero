@@ -14,7 +14,9 @@ struct RootView: View {
     
     var body: some View {
         ZStack{
-            ContentView()
+            if !showSignedInView {
+                MainTabView(showSignedInView: $showSignedInView)
+            }
         }
         .onAppear{
             Task{

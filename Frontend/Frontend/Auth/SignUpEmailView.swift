@@ -227,7 +227,7 @@ struct ModernInputField: View {
                 .foregroundStyle(.white.opacity(0.60))
                 .frame(width: 24)
             
-            TextField(placeholder, text: $text)
+            TextField("", text: $text, prompt: Text(placeholder).foregroundStyle(.white.opacity(0.55)))
                 .font(.system(size: 17, design: .rounded))
                 .foregroundStyle(.white)
                 .tint(AppColor.powderBlue)
@@ -262,7 +262,7 @@ struct ModernPasswordField: View {
                 .foregroundStyle(.white.opacity(0.60))
                 .frame(width: 24)
             
-            SecureField(placeholder, text: $text)
+            SecureField("", text: $text, prompt: Text(placeholder).foregroundStyle(.white.opacity(0.55)))
                 .font(.system(size: 17, design: .rounded))
                 .foregroundStyle(.white)
                 .tint(AppColor.powderBlue)
