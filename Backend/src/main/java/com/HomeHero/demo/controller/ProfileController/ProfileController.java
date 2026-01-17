@@ -24,7 +24,7 @@ public class ProfileController {
     }
 
     @RequestMapping(value = "/getProfile", produces = "application/json", method = RequestMethod.GET)
-    public String getProfile() {
+    public Profile getProfile() {
 
 //        if (authHeader == null || !authHeader.startsWith("Bearer ")) {
 //            throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Missing Bearer token");
@@ -33,6 +33,6 @@ public class ProfileController {
 //        String token = authHeader.replace("Bearer ", "");
         //String userId = authService.getUserIdFromToken(token);
 //        return profileService.getProfileById(UUID.fromString("userId"));
-        return "HELLO";
+        return profileService.getProfileById(UUID.fromString("d3576ad7-6f1f-490a-82a3-3a2de80d186f"));
     }
 }
