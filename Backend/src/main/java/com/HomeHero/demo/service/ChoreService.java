@@ -10,7 +10,9 @@ import com.HomeHero.demo.persistance.ProfileMapper;
 import com.HomeHero.demo.persistance.TaskToHouseholdMapper;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
+import org.springframework.web.reactive.function.client.WebClient;
 
 import java.util.List;
 import java.util.ArrayList;
@@ -27,9 +29,12 @@ public class ChoreService {
     private final ProfileMapper profileMapper;
     private final ObjectMapper objectMapper;
     private final TaskToHouseholdMapper taskToHouseholdMapper;
+    private final WebClient webClient;
+    private final String openRouterApiKey;
 
     // Temporary default creator profile until auth is wired end-to-end
     private static final UUID DEFAULT_PROFILE_ID = UUID.fromString("d3576ad7-6f1f-490a-82a3-3a2de80d186f");
+    private static final String OPENROUTER_API_URL = "https://openrouter.ai/api/v1/chat/completions";
 
     @Autowired
     public ChoreService(
@@ -38,7 +43,9 @@ public class ChoreService {
             HouseholdMemberMapper householdMemberMapper,
             ProfileMapper profileMapper,
             ObjectMapper objectMapper,
-            TaskToHouseholdMapper taskToHouseholdMapper
+            TaskToHouseholdMapper taskToHouseholdMapper,
+            WebClient.Builder webClientBuilder,
+            @Value("${openrouter.api.key}") String openRouterApiKey
     ) {
         this.choreMapper = choreMapper;
         this.householdMapper = householdMapper;
@@ -46,6 +53,8 @@ public class ChoreService {
         this.profileMapper = profileMapper;
         this.objectMapper = objectMapper;
         this.taskToHouseholdMapper = taskToHouseholdMapper;
+        this.webClient = webClientBuilder.build();
+        this.openRouterApiKey = openRouterApiKey;
     }
 
     public List<Chore> getChoresByHouseholdId(UUID householdId) {
@@ -86,8 +95,14 @@ public class ChoreService {
         c.setRepeatRule(req.getRepeatRule() == null ? "never" : req.getRepeatRule());
         c.setRotateEnabled(Boolean.TRUE.equals(req.getRotateEnabled()));
 
-        // Impact is hardcoded to 5 for now, regardless of request.
-        c.setImpact(5);
+        // Impact is calculated using OpenRouter API
+        String prompt = "You are an expert task management system that assigns point values to household chores based on their difficulty and time required. Respond with a single integer from 1 to 10. No extra text. Chore: %s%s".formatted(
+                c.getTitle(),
+                c.getDescription() != null ? " - " + c.getDescription() : ""
+        );
+
+        int impact = getChoreImpactFromOpenRouter(prompt);
+        c.setImpact(impact);
 
         try {
             if (req.getRotateWithProfileIds() != null) {
@@ -222,6 +237,79 @@ public class ChoreService {
 
         int idx = alreadyAssignedCount % candidatesOrdered.size();
         return candidatesOrdered.get(idx);
+    }
+
+    private int getChoreImpactFromOpenRouter(String prompt) {
+        try {
+            OpenRouterRequest request = new OpenRouterRequest(
+                    "google/gemini-2.5-flash",
+                List.of(new Message("user", prompt)),
+                1
+            );
+
+            OpenRouterResponse response = webClient.post()
+                    .uri(OPENROUTER_API_URL)
+                    .header("Authorization", "Bearer " + openRouterApiKey)
+                    .header("HTTP-Referer", "https://homehero.app")
+                    .header("X-Title", "HomeHero")
+                    .bodyValue(request)
+                    .retrieve()
+                    .bodyToMono(OpenRouterResponse.class)
+                    .block();
+
+            if (response != null && response.getChoices() != null && !response.getChoices().isEmpty()) {
+                String content = response.getChoices().get(0).getMessage().getContent().trim();
+                return Integer.parseInt(content);
+            }
+            return 5; // Default fallback
+        } catch (Exception e) {
+            System.err.println("Error calling OpenRouter API: " + e.getMessage());
+            return 5; // Default fallback
+        }
+    }
+
+    // Helper classes for OpenRouter API
+    public static class OpenRouterRequest {
+        private String model;
+        private List<Message> messages;
+        private Integer top_p;
+
+        public OpenRouterRequest(String model, List<Message> messages, Integer top_p) {
+            this.model = model;
+            this.messages = messages;
+            this.top_p = top_p;
+        }
+
+        public String getModel() { return model; }
+        public List<Message> getMessages() { return messages; }
+        public Integer getTop_p() { return top_p; }
+    }
+
+    public static class Message {
+        private String role;
+        private String content;
+
+        public Message(String role, String content) {
+            this.role = role;
+            this.content = content;
+        }
+
+        public String getRole() { return role; }
+        public String getContent() { return content; }
+    }
+
+    public static class OpenRouterResponse {
+        private List<Choice> choices;
+
+        public List<Choice> getChoices() { return choices; }
+        public void setChoices(List<Choice> choices) { this.choices = choices; }
+    }
+
+    public static class Choice {
+        private Message message;
+
+        public Message getMessage() { return message; }
+        public void setMessage(Message message) { this.message = message; }
     }
 }
 
