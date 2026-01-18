@@ -1,9 +1,7 @@
 package com.HomeHero.demo.controller.GroceryController;
 
 import com.HomeHero.demo.model.Grocery;
-import com.HomeHero.demo.model.Profile;
 import com.HomeHero.demo.service.grocery.GroceryService;
-import com.HomeHero.demo.service.profile.ProfileService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
