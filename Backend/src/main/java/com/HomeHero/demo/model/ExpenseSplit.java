@@ -5,39 +5,42 @@ import java.util.UUID;
 public class ExpenseSplit {
 
     private UUID id;
-    private UUID expenseId; 
-    private UUID profileId; 
+    private UUID profileId;
+    private UUID expenseId;
     private float amount;
 
-    public UUID getId() { 
-        return id; 
+    public ExpenseSplit() {}
+
+    public UUID getId() {
+        return id;
     }
 
-    public void setId(UUID id) { 
-        this.id = id; 
+    public UUID getProfileId() {
+        return profileId;
     }
 
-    public UUID getExpenseId() { 
-        return expenseId; 
+    public UUID getExpenseId() {
+        return expenseId;
     }
 
-    public void setExpenseId(UUID expenseId) { 
-        this.expenseId = expenseId; 
+    public float getAmount() {
+        return amount;
     }
 
-    public UUID getProfileId() { 
-        return profileId; 
+    public void setId(UUID id) {
+        this.id = id;
     }
 
-    public void setProfileId(UUID profileId) { 
-        this.profileId = profileId; 
+    public void setProfileId(UUID profileId) {
+        this.profileId = profileId;
     }
 
-    public float getAmount() { 
-        return amount; 
+    public void setExpenseId(UUID expenseId) {
+        this.expenseId = expenseId;
     }
 
-    public void setAmount(float amount) { 
-        this.amount = amount; 
+    public void setAmount(float amount) {
+        this.amount = amount;
     }
+    
 }
