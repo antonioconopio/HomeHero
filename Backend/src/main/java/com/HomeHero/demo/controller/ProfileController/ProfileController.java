@@ -1,38 +1,53 @@
 package com.HomeHero.demo.controller.ProfileController;
 
+import com.HomeHero.demo.model.HouseholdInvite;
 import com.HomeHero.demo.model.Profile;
 import com.HomeHero.demo.service.ProfileService;
+import com.HomeHero.demo.service.HouseholdInviteService;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.http.HttpStatus;
-import org.springframework.web.bind.annotation.RequestHeader;
+import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestMethod;
+import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.RequestHeader;
 import org.springframework.web.bind.annotation.RestController;
-import org.springframework.web.server.ResponseStatusException;
+import com.HomeHero.demo.util.CurrentUser;
 
+import java.util.List;
 import java.util.UUID;
 
 @RestController
 @RequestMapping("/api/v1")
 public class ProfileController {
-    //private final AuthService authService;
+
     private final ProfileService profileService;
+    private final HouseholdInviteService householdInviteService;
 
     @Autowired
-    public ProfileController(ProfileService profileService) {
+    public ProfileController(ProfileService profileService, HouseholdInviteService householdInviteService) {
         this.profileService = profileService;
+        this.householdInviteService = householdInviteService;
     }
 
-    @RequestMapping(value = "/getProfile", produces = "application/json", method = RequestMethod.GET)
-    public Profile getProfile() {
+    @GetMapping(value = "/getProfile", produces = "application/json")
+    public Profile getProfile(
+            @RequestHeader(value = "X-Profile-Id", required = false) String profileId
+    ) {
+        UUID id = CurrentUser.resolveProfileId(profileId);
+        return profileService.getProfileById(id);
+    }
 
-//        if (authHeader == null || !authHeader.startsWith("Bearer ")) {
-//            throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Missing Bearer token");
-//        }
-//
-//        String token = authHeader.replace("Bearer ", "");
-        //String userId = authService.getUserIdFromToken(token);
-//        return profileService.getProfileById(UUID.fromString("userId"));
-        return profileService.getProfileById(UUID.fromString("d3576ad7-6f1f-490a-82a3-3a2de80d186f"));
+    @GetMapping(value = "/profiles/search", produces = "application/json")
+    public List<Profile> searchProfilesByEmail(@RequestParam("email") String email) {
+        return profileService.searchProfilesByEmail(email);
+    }
+
+    @GetMapping(value = "/my/invites", produces = "application/json")
+    public List<HouseholdInvite> getMyInvites(
+            @RequestHeader(value = "X-Profile-Id", required = false) String profileId
+    ) {
+        UUID id = CurrentUser.resolveProfileId(profileId);
+        Profile me = profileService.getProfileById(id);
+        String email = me == null ? null : me.getEmail();
+        return householdInviteService.getInvitesForProfile(id, email);
     }
 }

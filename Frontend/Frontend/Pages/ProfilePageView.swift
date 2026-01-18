@@ -9,9 +9,30 @@ import SwiftUI
 
 struct ProfilePageView: View {
     @Binding var showSignedInView: Bool
+    @EnvironmentObject private var householdSession: HouseholdSession
+
     @State private var isLoggingOut = false
     @State private var showLogoutError = false
     @State private var errorMessage = ""
+    @State private var authEmail: String?
+
+    @State private var showCreateHousehold = false
+    @State private var showJoinPlaceholder = false
+
+    private var invitesToShow: [HomeHeroAPI.HouseholdInvite] {
+        let meId = householdSession.me?.id
+        let receivedOnly = householdSession.invites.filter { inv in
+            // defensive: never show invites you sent
+            if let meId, inv.inviterProfileId == meId { return false }
+            return true
+        }
+
+        // If a household is selected, show only invites for that household.
+        if let selectedId = householdSession.selectedHouseholdId {
+            return receivedOnly.filter { $0.householdId == selectedId }
+        }
+        return receivedOnly
+    }
     
     var body: some View {
         NavigationStack {
@@ -38,15 +59,144 @@ struct ProfilePageView: View {
                                     .foregroundStyle(.white)
                             }
                             
-                            Text("Your Profile")
+                            Text(displayName)
                                 .font(.system(size: 28, weight: .bold, design: .rounded))
                                 .foregroundStyle(AppColor.oxfordNavy)
                             
-                            Text("Manage your account settings")
+                            Text(displayEmail)
                                 .font(.system(size: 15, design: .rounded))
                                 .foregroundStyle(AppColor.prussianBlue.opacity(0.70))
                         }
                         .padding(.top, 24)
+
+                        // Household Section (drives other tabs)
+                        VStack(alignment: .leading, spacing: 12) {
+                            Text("Household")
+                                .font(.system(size: 18, weight: .bold, design: .rounded))
+                                .foregroundStyle(AppColor.oxfordNavy)
+                                .padding(.horizontal)
+
+                            VStack(spacing: 12) {
+                                if householdSession.households.isEmpty {
+                                    EmptyStateCard(
+                                        title: "No household yet",
+                                        subtitle: "Create a household and invite roommates to begin."
+                                    )
+                                } else {
+                                    Menu {
+                                        ForEach(householdSession.households) { h in
+                                            Button(h.name) { householdSession.selectHousehold(h.id) }
+                                        }
+                                    } label: {
+                                        HStack {
+                                            Text(householdSession.selectedHousehold?.name ?? "Select a household")
+                                                .font(.system(size: 16, weight: .medium, design: .rounded))
+                                                .foregroundStyle(AppColor.oxfordNavy)
+                                            Spacer()
+                                            Image(systemName: "chevron.down")
+                                                .font(.system(size: 14, weight: .semibold))
+                                                .foregroundStyle(AppColor.prussianBlue.opacity(0.45))
+                                        }
+                                        .padding(14)
+                                        .background(Color.white)
+                                        .clipShape(RoundedRectangle(cornerRadius: 14, style: .continuous))
+                                        .shadow(color: .black.opacity(0.05), radius: 8, x: 0, y: 2)
+                                    }
+
+                                    if let code = householdSession.selectedHousehold?.homeCode, !code.isEmpty {
+                                        HStack {
+                                            VStack(alignment: .leading, spacing: 4) {
+                                                Text("Home code")
+                                                    .font(.system(size: 13, weight: .semibold, design: .rounded))
+                                                    .foregroundStyle(AppColor.prussianBlue.opacity(0.75))
+                                                Text(code)
+                                                    .font(.system(size: 20, weight: .bold, design: .monospaced))
+                                                    .foregroundStyle(AppColor.oxfordNavy)
+                                            }
+                                            Spacer()
+                                            Button {
+                                                UIPasteboard.general.string = code
+                                            } label: {
+                                                Image(systemName: "doc.on.doc")
+                                                    .font(.system(size: 16, weight: .semibold))
+                                                    .foregroundStyle(AppColor.oxfordNavy)
+                                            }
+                                            .accessibilityLabel("Copy home code")
+                                        }
+                                        .padding(14)
+                                        .background(Color.white)
+                                        .clipShape(RoundedRectangle(cornerRadius: 14, style: .continuous))
+                                        .shadow(color: .black.opacity(0.05), radius: 8, x: 0, y: 2)
+                                    }
+                                }
+
+                                HStack(spacing: 12) {
+                                    Button {
+                                        showCreateHousehold = true
+                                    } label: {
+                                        HStack(spacing: 10) {
+                                            Image(systemName: "plus.circle.fill")
+                                            Text("Create household")
+                                                .font(.system(size: 15, weight: .semibold, design: .rounded))
+                                            Spacer()
+                                        }
+                                        .foregroundStyle(.white)
+                                        .padding(14)
+                                        .background(
+                                            LinearGradient(
+                                                colors: [AppColor.oxfordNavy, AppColor.regalNavy],
+                                                startPoint: .leading,
+                                                endPoint: .trailing
+                                            )
+                                        )
+                                        .clipShape(RoundedRectangle(cornerRadius: 14, style: .continuous))
+                                        .shadow(color: AppColor.oxfordNavy.opacity(0.25), radius: 10, x: 0, y: 6)
+                                    }
+
+                                    Button {
+                                        showJoinPlaceholder = true
+                                    } label: {
+                                        HStack(spacing: 10) {
+                                            Image(systemName: "person.2.fill")
+                                            Text("Join")
+                                                .font(.system(size: 15, weight: .semibold, design: .rounded))
+                                            Spacer()
+                                        }
+                                        .foregroundStyle(AppColor.oxfordNavy)
+                                        .padding(14)
+                                        .background(Color.white)
+                                        .clipShape(RoundedRectangle(cornerRadius: 14, style: .continuous))
+                                        .shadow(color: .black.opacity(0.05), radius: 8, x: 0, y: 2)
+                                    }
+                                }
+                            }
+                            .padding(.horizontal)
+                        }
+
+                        // Invites Section (for roommates)
+                        VStack(alignment: .leading, spacing: 12) {
+                            Text("Invites")
+                                .font(.system(size: 18, weight: .bold, design: .rounded))
+                                .foregroundStyle(AppColor.oxfordNavy)
+                                .padding(.horizontal)
+
+                            if invitesToShow.isEmpty {
+                                EmptyStateCard(
+                                    title: "No invites",
+                                    subtitle: householdSession.selectedHouseholdId == nil
+                                    ? "Invites to join a household will show up here."
+                                    : "No invites for the selected household."
+                                )
+                                .padding(.horizontal)
+                            } else {
+                                VStack(spacing: 12) {
+                                    ForEach(invitesToShow) { inv in
+                                        InviteRow(invite: inv)
+                                    }
+                                }
+                                .padding(.horizontal)
+                            }
+                        }
                         
                         // Settings Section
                         VStack(spacing: 12) {
@@ -116,11 +266,24 @@ struct ProfilePageView: View {
             }
             .navigationTitle("Profile")
             .navigationBarTitleDisplayMode(.inline)
+            .task {
+                await householdSession.refresh()
+                // Fallback email (in case backend profile email is empty)
+                authEmail = try? await AuthenticationManager.shared.getAuthenticatedUser().email
+            }
             .alert("Logout Error", isPresented: $showLogoutError) {
                 Button("OK", role: .cancel) { }
             } message: {
                 Text(errorMessage)
             }
+        }
+        .sheet(isPresented: $showCreateHousehold) {
+            CreateHouseholdFlowSheet()
+                .environmentObject(householdSession)
+        }
+        .sheet(isPresented: $showJoinPlaceholder) {
+            JoinHouseholdPlaceholderSheet()
+                .environmentObject(householdSession)
         }
     }
     
@@ -143,6 +306,21 @@ struct ProfilePageView: View {
                 }
             }
         }
+    }
+
+    private var displayName: String {
+        let first = householdSession.me?.firstName?.trimmingCharacters(in: .whitespacesAndNewlines) ?? ""
+        let last = householdSession.me?.lastName?.trimmingCharacters(in: .whitespacesAndNewlines) ?? ""
+        let full = [first, last].filter { !$0.isEmpty }.joined(separator: " ")
+        return full.isEmpty ? "Profile" : full
+    }
+
+    private var displayEmail: String {
+        let backendEmail = householdSession.me?.email?.trimmingCharacters(in: .whitespacesAndNewlines) ?? ""
+        if !backendEmail.isEmpty { return backendEmail }
+
+        let supabaseEmail = (authEmail ?? "").trimmingCharacters(in: .whitespacesAndNewlines)
+        return supabaseEmail.isEmpty ? "Manage your account settings" : supabaseEmail
     }
 }
 
@@ -170,6 +348,58 @@ struct ProfileMenuItem: View {
                 .font(.system(size: 14, weight: .semibold))
                 .foregroundStyle(AppColor.prussianBlue.opacity(0.30))
         }
+        .padding(16)
+        .background(Color.white)
+        .clipShape(RoundedRectangle(cornerRadius: 16, style: .continuous))
+        .shadow(color: .black.opacity(0.05), radius: 8, x: 0, y: 2)
+    }
+}
+
+private struct InviteRow: View {
+    let invite: HomeHeroAPI.HouseholdInvite
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 8) {
+            Text(invite.householdAddress ?? "Household")
+                .font(.system(size: 16, weight: .semibold, design: .rounded))
+                .foregroundStyle(AppColor.oxfordNavy)
+
+            if let email = invite.inviteeEmail, !email.isEmpty {
+                Text(email)
+                    .font(.system(size: 13, design: .rounded))
+                    .foregroundStyle(AppColor.prussianBlue.opacity(0.65))
+            }
+
+            Text((invite.status ?? "pending").capitalized)
+                .font(.system(size: 12, weight: .semibold, design: .rounded))
+                .foregroundStyle(AppColor.oxfordNavy)
+                .padding(.horizontal, 10)
+                .padding(.vertical, 6)
+                .background(AppColor.powderBlue.opacity(0.18))
+                .clipShape(Capsule())
+        }
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .padding(16)
+        .background(Color.white)
+        .clipShape(RoundedRectangle(cornerRadius: 16, style: .continuous))
+        .shadow(color: .black.opacity(0.05), radius: 8, x: 0, y: 2)
+    }
+}
+
+private struct EmptyStateCard: View {
+    let title: String
+    let subtitle: String
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 6) {
+            Text(title)
+                .font(.system(size: 16, weight: .semibold, design: .rounded))
+                .foregroundStyle(AppColor.oxfordNavy)
+            Text(subtitle)
+                .font(.system(size: 14, design: .rounded))
+                .foregroundStyle(AppColor.prussianBlue.opacity(0.70))
+        }
+        .frame(maxWidth: .infinity, alignment: .leading)
         .padding(16)
         .background(Color.white)
         .clipShape(RoundedRectangle(cornerRadius: 16, style: .continuous))

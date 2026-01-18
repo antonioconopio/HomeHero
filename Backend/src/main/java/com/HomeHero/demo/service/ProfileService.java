@@ -6,6 +6,7 @@ import com.HomeHero.demo.persistance.ProfileMapper;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
+import java.util.List;
 import java.util.UUID;
 
 @Service
@@ -20,5 +21,16 @@ public class ProfileService {
 
     public Profile getProfileById(UUID id) {
         return profileMapper.getProfileById(id);
+    }
+
+    public Profile getProfileByEmail(String email) {
+        return profileMapper.getProfileByEmail(email);
+    }
+
+    public List<Profile> searchProfilesByEmail(String email) {
+        if (email == null) return List.of();
+        String q = email.trim();
+        if (q.isEmpty()) return List.of();
+        return profileMapper.searchProfilesByEmail(q);
     }
 }
