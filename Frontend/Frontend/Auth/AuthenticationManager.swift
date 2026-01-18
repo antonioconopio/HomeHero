@@ -44,6 +44,23 @@ class AuthenticationManager: ObservableObject {
     private init () {}
     
     @Published var authToken: String? = nil
+
+    // DEV MODE: Persist the "logged in" profile UUID in UserDefaults.
+    // This is not secure and is meant only for rapid prototyping.
+    private let profileIdKey = "logged_in_profile_id"
+
+    func getPersistedProfileId() -> UUID? {
+        guard let raw = UserDefaults.standard.string(forKey: profileIdKey) else { return nil }
+        return UUID(uuidString: raw)
+    }
+
+    private func persistProfileId(_ id: UUID?) {
+        if let id {
+            UserDefaults.standard.set(id.uuidString, forKey: profileIdKey)
+        } else {
+            UserDefaults.standard.removeObject(forKey: profileIdKey)
+        }
+    }
     
     let supabase = SupabaseClient(
         supabaseURL: URL(string: "https://yszsamtouruajsjzavhp.supabase.co")!,
@@ -86,6 +103,9 @@ class AuthenticationManager: ObservableObject {
             self.authToken = session.accessToken
         }
         
+        // DEV MODE: Use Supabase user id as our backend profile id.
+        persistProfileId(session.user.id)
+        
         print("signed up! \(session.user)")
 
         return AppUser(session: session)
@@ -100,6 +120,9 @@ class AuthenticationManager: ObservableObject {
         await MainActor.run {
             self.authToken = session.accessToken
         }
+        
+        // DEV MODE: Use Supabase user id as our backend profile id.
+        persistProfileId(session.user.id)
         
         
         print("signed in! \(session.user)")
@@ -121,5 +144,9 @@ class AuthenticationManager: ObservableObject {
     
     func logout() async throws {
         try await supabase.auth.signOut()
+        await MainActor.run {
+            self.authToken = nil
+        }
+        persistProfileId(nil)
     }
 }

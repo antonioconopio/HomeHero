@@ -11,17 +11,21 @@ struct RootView: View {
     
     
     @State private var showSignedInView: Bool = false
+    @StateObject private var householdSession = HouseholdSession()
     
     var body: some View {
         ZStack{
             if !showSignedInView {
                 MainTabView(showSignedInView: $showSignedInView)
+                    .environmentObject(householdSession)
             }
         }
+        .preferredColorScheme(.dark)
         .onAppear{
             Task{
-                let authUser = try? await AuthenticationManager.shared.getAuthenticatedUser()
-                self.showSignedInView = authUser == nil
+                // DEV MODE: rely on persisted profile id.
+                self.showSignedInView = (AuthenticationManager.shared.getPersistedProfileId() == nil)
+                await householdSession.refresh()
             }
         }
         .fullScreenCover(isPresented: $showSignedInView){
