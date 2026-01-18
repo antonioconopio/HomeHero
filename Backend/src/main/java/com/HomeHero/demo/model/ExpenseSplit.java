@@ -8,6 +8,7 @@ public class ExpenseSplit {
     private UUID profileId;
     private UUID expenseId;
     private float amount;
+    private boolean paid;
 
     public ExpenseSplit() {}
 
@@ -27,6 +28,10 @@ public class ExpenseSplit {
         return amount;
     }
 
+    public boolean isPaid() {
+        return paid;
+    }
+
     public void setId(UUID id) {
         this.id = id;
     }
@@ -42,5 +47,8 @@ public class ExpenseSplit {
     public void setAmount(float amount) {
         this.amount = amount;
     }
-    
+
+    public void setPaid(boolean paid) {
+        this.paid = paid;
+    }
 }

@@ -5,14 +5,21 @@ import com.HomeHero.demo.model.Profile;
 import com.HomeHero.demo.service.ProfileService;
 import com.HomeHero.demo.service.HouseholdInviteService;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.PutMapping;
+import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RequestHeader;
 import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.server.ResponseStatusException;
 import com.HomeHero.demo.util.CurrentUser;
 
 import java.util.List;
+import java.util.Map;
 import java.util.UUID;
 
 @RestController
@@ -36,6 +43,18 @@ public class ProfileController {
         return profileService.getProfileById(id);
     }
 
+    @PutMapping(value = "/profile", consumes = "application/json", produces = "application/json")
+    public Profile updateProfile(
+            @RequestHeader(value = "X-Profile-Id", required = false) String profileIdHeader,
+            @RequestBody Map<String, String> body
+    ) {
+        UUID profileId = CurrentUser.resolveProfileId(profileIdHeader);
+        String firstName = body.get("firstName");
+        String lastName = body.get("lastName");
+        profileService.updateProfile(profileId, firstName, lastName);
+        return profileService.getProfileById(profileId);
+    }
+
     @GetMapping(value = "/profiles/search", produces = "application/json")
     public List<Profile> searchProfilesByEmail(@RequestParam("email") String email) {
         return profileService.searchProfilesByEmail(email);
@@ -49,5 +68,31 @@ public class ProfileController {
         Profile me = profileService.getProfileById(id);
         String email = me == null ? null : me.getEmail();
         return householdInviteService.getInvitesForProfile(id, email);
+    }
+
+    @PostMapping(value = "/invites/{inviteId}/accept")
+    public void acceptInvite(
+            @PathVariable UUID inviteId,
+            @RequestHeader(value = "X-Profile-Id", required = false) String profileIdHeader
+    ) {
+        try {
+            UUID profileId = CurrentUser.resolveProfileId(profileIdHeader);
+            householdInviteService.acceptInvite(inviteId, profileId);
+        } catch (IllegalArgumentException e) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, e.getMessage());
+        }
+    }
+
+    @PostMapping(value = "/invites/{inviteId}/decline")
+    public void declineInvite(
+            @PathVariable UUID inviteId,
+            @RequestHeader(value = "X-Profile-Id", required = false) String profileIdHeader
+    ) {
+        try {
+            UUID profileId = CurrentUser.resolveProfileId(profileIdHeader);
+            householdInviteService.declineInvite(inviteId, profileId);
+        } catch (IllegalArgumentException e) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, e.getMessage());
+        }
     }
 }

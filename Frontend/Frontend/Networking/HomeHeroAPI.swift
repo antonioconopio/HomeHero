@@ -81,6 +81,8 @@ final class HomeHeroAPI {
         let lastName: String?
         let email: String?
         let phoneNumber: String?
+        let amountOwed: Float?
+        let amountOwedToUser: Float?
     }
 
     struct HouseholdInvite: Codable, Identifiable, Hashable {
@@ -131,6 +133,35 @@ final class HomeHeroAPI {
 
     struct JoinHouseholdRequest: Codable {
         let homeCode: String
+    }
+
+    // MARK: - Expense DTOs
+
+    struct ExpenseSplit: Codable, Identifiable, Hashable {
+        let id: UUID
+        let expenseId: UUID
+        let profileId: UUID
+        let amount: Float
+        let paid: Bool
+    }
+
+    struct Expense: Codable, Identifiable, Hashable {
+        let id: UUID
+        let householdId: UUID
+        let profileId: UUID
+        let item: String
+        let cost: Float
+        let score: Int
+        let createdAt: Date?
+        let splits: [ExpenseSplit]?
+    }
+
+    struct CreateExpenseRequest: Codable {
+        let profileId: UUID
+        let item: String
+        let cost: Float
+        let score: Int
+        let profileIds: [UUID]?
     }
 
     // MARK: - Public API
@@ -201,6 +232,19 @@ final class HomeHeroAPI {
         _ = try await send(req, as: EmptyResponse.self)
     }
 
+    func inviteToHousehold(householdId: UUID, email: String) async throws {
+        let url = try buildURL(path: "/households/\(householdId.uuidString)/invite")
+        let body = ["email": email]
+        let req = try makeJSONRequest(url: url, method: "POST", body: body)
+        _ = try await send(req, as: EmptyResponse.self)
+    }
+
+    func leaveHousehold(householdId: UUID) async throws {
+        let url = try buildURL(path: "/households/\(householdId.uuidString)/leave")
+        let req = makeRequest(url: url, method: "POST")
+        _ = try await send(req, as: EmptyResponse.self)
+    }
+
     func getChores(householdId: UUID) async throws -> [Chore] {
         let url = try buildURL(path: "/households/\(householdId.uuidString)/chores")
         let req = makeRequest(url: url, method: "GET")
@@ -215,6 +259,86 @@ final class HomeHeroAPI {
 
     func completeChore(householdId: UUID, choreId: UUID) async throws {
         let url = try buildURL(path: "/households/\(householdId.uuidString)/chores/\(choreId.uuidString)/complete")
+        let req = makeRequest(url: url, method: "POST")
+        _ = try await send(req, as: EmptyResponse.self)
+    }
+
+    // MARK: - Expenses API
+
+    func getExpenses(householdId: UUID) async throws -> [Expense] {
+        let url = try buildURL(path: "/expenses/households/\(householdId.uuidString)")
+        let req = makeRequest(url: url, method: "GET")
+        return try await send(req, as: [Expense].self)
+    }
+
+    func getExpense(expenseId: UUID) async throws -> Expense {
+        let url = try buildURL(path: "/expenses/\(expenseId.uuidString)")
+        let req = makeRequest(url: url, method: "GET")
+        return try await send(req, as: Expense.self)
+    }
+
+    func getMonthlyTotal(householdId: UUID) async throws -> Float {
+        let url = try buildURL(path: "/expenses/households/\(householdId.uuidString)/monthly-total")
+        let req = makeRequest(url: url, method: "GET")
+        return try await send(req, as: Float.self)
+    }
+
+    func getMySplits(householdId: UUID) async throws -> [ExpenseSplit] {
+        let url = try buildURL(path: "/expenses/households/\(householdId.uuidString)/my-splits")
+        let req = makeRequest(url: url, method: "GET")
+        return try await send(req, as: [ExpenseSplit].self)
+    }
+
+    func createExpense(householdId: UUID, payerProfileId: UUID, item: String, cost: Float, splitWithProfileIds: [UUID]?) async throws -> Expense {
+        let url = try buildURL(path: "/expenses/households/\(householdId.uuidString)/expenses")
+        let body = CreateExpenseRequest(
+            profileId: payerProfileId,
+            item: item,
+            cost: cost,
+            score: 0,
+            profileIds: splitWithProfileIds
+        )
+        let req = try makeJSONRequest(url: url, method: "POST", body: body)
+        return try await send(req, as: Expense.self)
+    }
+
+    func deleteExpense(expenseId: UUID) async throws {
+        let url = try buildURL(path: "/expenses/\(expenseId.uuidString)")
+        let req = makeRequest(url: url, method: "DELETE")
+        _ = try await send(req, as: EmptyResponse.self)
+    }
+
+    func markSplitAsPaid(splitId: UUID) async throws {
+        let url = try buildURL(path: "/expenses/splits/\(splitId.uuidString)/mark-paid")
+        let req = makeRequest(url: url, method: "POST")
+        _ = try await send(req, as: EmptyResponse.self)
+    }
+
+    func markSplitAsUnpaid(splitId: UUID) async throws {
+        let url = try buildURL(path: "/expenses/splits/\(splitId.uuidString)/mark-unpaid")
+        let req = makeRequest(url: url, method: "POST")
+        _ = try await send(req, as: EmptyResponse.self)
+    }
+
+    // MARK: - Profile API
+
+    func updateProfile(firstName: String, lastName: String) async throws -> Profile {
+        let url = try buildURL(path: "/profile")
+        let body = ["firstName": firstName, "lastName": lastName]
+        let req = try makeJSONRequest(url: url, method: "PUT", body: body)
+        return try await send(req, as: Profile.self)
+    }
+
+    // MARK: - Invites API
+
+    func acceptInvite(inviteId: UUID) async throws {
+        let url = try buildURL(path: "/invites/\(inviteId.uuidString)/accept")
+        let req = makeRequest(url: url, method: "POST")
+        _ = try await send(req, as: EmptyResponse.self)
+    }
+
+    func declineInvite(inviteId: UUID) async throws {
+        let url = try buildURL(path: "/invites/\(inviteId.uuidString)/decline")
         let req = makeRequest(url: url, method: "POST")
         _ = try await send(req, as: EmptyResponse.self)
     }
