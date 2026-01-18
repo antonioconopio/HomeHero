@@ -7,6 +7,7 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		12584D802F1C7CC900879258 /* ComposableArchitecture in Frameworks */ = {isa = PBXBuildFile; productRef = 12584D7F2F1C7CC900879258 /* ComposableArchitecture */; };
 		3506D8482F1C1BB00001D3D7 /* Auth in Frameworks */ = {isa = PBXBuildFile; productRef = 3506D8472F1C1BB00001D3D7 /* Auth */; };
 		3506D84A2F1C1BB00001D3D7 /* Functions in Frameworks */ = {isa = PBXBuildFile; productRef = 3506D8492F1C1BB00001D3D7 /* Functions */; };
 		3506D84C2F1C1BB00001D3D7 /* PostgREST in Frameworks */ = {isa = PBXBuildFile; productRef = 3506D84B2F1C1BB00001D3D7 /* PostgREST */; };
@@ -34,6 +35,7 @@
 			files = (
 				3506D84C2F1C1BB00001D3D7 /* PostgREST in Frameworks */,
 				3506D84A2F1C1BB00001D3D7 /* Functions in Frameworks */,
+				12584D802F1C7CC900879258 /* ComposableArchitecture in Frameworks */,
 				3506D8522F1C1BB00001D3D7 /* Supabase in Frameworks */,
 				3506D8482F1C1BB00001D3D7 /* Auth in Frameworks */,
 				3506D8502F1C1BB00001D3D7 /* Storage in Frameworks */,
@@ -94,6 +96,7 @@
 				3506D84D2F1C1BB00001D3D7 /* Realtime */,
 				3506D84F2F1C1BB00001D3D7 /* Storage */,
 				3506D8512F1C1BB00001D3D7 /* Supabase */,
+				12584D7F2F1C7CC900879258 /* ComposableArchitecture */,
 			);
 			productName = Frontend;
 			productReference = 3506D81E2F1C13FB0001D3D7 /* Frontend.app */;
@@ -125,6 +128,8 @@
 			minimizedProjectReferenceProxies = 1;
 			packageReferences = (
 				3506D8452F1C1B990001D3D7 /* XCRemoteSwiftPackageReference "supabase-swift" */,
+				12584D7E2F1C7CC900879258 /* XCRemoteSwiftPackageReference "swift-composable-architecture" */,
+				12584E3C2F1C886900879258 /* XCRemoteSwiftPackageReference "Moya" */,
 			);
 			preferredProjectObjectVersion = 77;
 			productRefGroup = 3506D81F2F1C13FB0001D3D7 /* Products */;
@@ -366,6 +371,22 @@
 /* End XCConfigurationList section */
 
 /* Begin XCRemoteSwiftPackageReference section */
+		12584D7E2F1C7CC900879258 /* XCRemoteSwiftPackageReference "swift-composable-architecture" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/pointfreeco/swift-composable-architecture.git";
+			requirement = {
+				kind = upToNextMajorVersion;
+				minimumVersion = 1.23.1;
+			};
+		};
+		12584E3C2F1C886900879258 /* XCRemoteSwiftPackageReference "Moya" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/Moya/Moya";
+			requirement = {
+				kind = upToNextMajorVersion;
+				minimumVersion = 15.0.3;
+			};
+		};
 		3506D8452F1C1B990001D3D7 /* XCRemoteSwiftPackageReference "supabase-swift" */ = {
 			isa = XCRemoteSwiftPackageReference;
 			repositoryURL = "https://github.com/supabase/supabase-swift.git";
@@ -377,6 +398,11 @@
 /* End XCRemoteSwiftPackageReference section */
 
 /* Begin XCSwiftPackageProductDependency section */
+		12584D7F2F1C7CC900879258 /* ComposableArchitecture */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 12584D7E2F1C7CC900879258 /* XCRemoteSwiftPackageReference "swift-composable-architecture" */;
+			productName = ComposableArchitecture;
+		};
 		3506D8472F1C1BB00001D3D7 /* Auth */ = {
 			isa = XCSwiftPackageProductDependency;
 			package = 3506D8452F1C1B990001D3D7 /* XCRemoteSwiftPackageReference "supabase-swift" */;
