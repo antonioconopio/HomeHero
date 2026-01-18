@@ -20,6 +20,7 @@ struct RootView: View {
                     .environmentObject(householdSession)
             }
         }
+        .preferredColorScheme(.dark)
         .onAppear{
             Task{
                 // DEV MODE: rely on persisted profile id.

@@ -26,7 +26,7 @@ public interface ChoreMapper {
                 'never'::text AS repeat_rule,
                 NULL::boolean AS rotate_enabled,
                 NULL::text AS rotate_with_json,
-                t.profile_id_assignee AS assignee_id,
+                th.profile_id AS assignee_id,
                 t.task_score AS impact,
                 t.created_at AS created_at
               FROM public.task_to_household th
@@ -36,6 +36,29 @@ public interface ChoreMapper {
             ORDER BY created_at DESC
             """)
     List<Chore> getChoresByHouseholdId(@Param("householdId") UUID householdId);
+
+    @Select("""
+            SELECT
+              th.household_id AS household_id,
+              t.id AS id,
+              t.task_name AS title,
+              NULL::text AS description,
+              t.task_due_date AS due_at,
+              NULL::date AS start_date,
+              NULL::date AS end_date,
+              'never'::text AS repeat_rule,
+              NULL::boolean AS rotate_enabled,
+              NULL::text AS rotate_with_json,
+              th.profile_id AS assignee_id,
+              t.task_score AS impact,
+              t.created_at AS created_at
+            FROM public.task_to_household th
+            JOIN public.task t ON t.id = th.task_id
+            WHERE th.household_id = #{householdId}
+              AND t.id = #{taskId}
+            LIMIT 1
+            """)
+    Chore getChoreByHouseholdAndTaskId(@Param("householdId") UUID householdId, @Param("taskId") UUID taskId);
 
     @Select("""
             SELECT

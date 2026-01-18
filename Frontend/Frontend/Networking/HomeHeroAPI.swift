@@ -125,6 +125,7 @@ final class HomeHeroAPI {
         let repeatRule: String
         let rotateEnabled: Bool
         let rotateWithProfileIds: [UUID]?
+        // Used only when repeatRule == "never" (single responsible roommate).
         let assigneeId: UUID?
     }
 
@@ -210,6 +211,12 @@ final class HomeHeroAPI {
         let url = try buildURL(path: "/households/\(householdId.uuidString)/chores")
         let req = try makeJSONRequest(url: url, method: "POST", body: request)
         return try await send(req, as: Chore.self)
+    }
+
+    func completeChore(householdId: UUID, choreId: UUID) async throws {
+        let url = try buildURL(path: "/households/\(householdId.uuidString)/chores/\(choreId.uuidString)/complete")
+        let req = makeRequest(url: url, method: "POST")
+        _ = try await send(req, as: EmptyResponse.self)
     }
 
     // MARK: - Helpers

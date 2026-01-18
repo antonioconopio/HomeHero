@@ -2,14 +2,20 @@ package com.HomeHero.demo.service;
 
 import com.HomeHero.demo.controller.ChoreController.dto.CreateChoreRequest;
 import com.HomeHero.demo.model.Chore;
+import com.HomeHero.demo.model.Profile;
 import com.HomeHero.demo.persistance.ChoreMapper;
 import com.HomeHero.demo.persistance.HouseholdMapper;
+import com.HomeHero.demo.persistance.HouseholdMemberMapper;
+import com.HomeHero.demo.persistance.ProfileMapper;
 import com.HomeHero.demo.persistance.TaskToHouseholdMapper;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
+import java.util.ArrayList;
+import java.util.HashSet;
+import java.util.Set;
 import java.util.UUID;
 
 @Service
@@ -17,6 +23,8 @@ public class ChoreService {
 
     private final ChoreMapper choreMapper;
     private final HouseholdMapper householdMapper;
+    private final HouseholdMemberMapper householdMemberMapper;
+    private final ProfileMapper profileMapper;
     private final ObjectMapper objectMapper;
     private final TaskToHouseholdMapper taskToHouseholdMapper;
 
@@ -27,11 +35,15 @@ public class ChoreService {
     public ChoreService(
             ChoreMapper choreMapper,
             HouseholdMapper householdMapper,
+            HouseholdMemberMapper householdMemberMapper,
+            ProfileMapper profileMapper,
             ObjectMapper objectMapper,
             TaskToHouseholdMapper taskToHouseholdMapper
     ) {
         this.choreMapper = choreMapper;
         this.householdMapper = householdMapper;
+        this.householdMemberMapper = householdMemberMapper;
+        this.profileMapper = profileMapper;
         this.objectMapper = objectMapper;
         this.taskToHouseholdMapper = taskToHouseholdMapper;
     }
@@ -72,8 +84,7 @@ public class ChoreService {
         c.setStartDate(req.getStartDate());
         c.setEndDate(req.getEndDate());
         c.setRepeatRule(req.getRepeatRule() == null ? "never" : req.getRepeatRule());
-        c.setRotateEnabled(req.getRotateEnabled());
-        c.setAssigneeId(req.getAssigneeId());
+        c.setRotateEnabled(Boolean.TRUE.equals(req.getRotateEnabled()));
 
         // Impact is hardcoded to 5 for now, regardless of request.
         c.setImpact(5);
@@ -88,19 +99,129 @@ public class ChoreService {
             throw new IllegalArgumentException("Invalid rotateWithProfileIds");
         }
 
+        // Assignment: no manual assignee input from client.
+        // If cycling is enabled (repeatRule != never + rotateEnabled), assign in a round-robin cycle
+        // through the selected roommates (or all roommates if none specified).
+        // Otherwise assign deterministically to the first household member (stable, non-random).
+        UUID chosenAssigneeId = pickCycledAssignee(householdId, req);
+        c.setAssigneeId(chosenAssigneeId);
+
         // Insert into existing `task` table
         choreMapper.createChore(c);
 
         // Link to household via existing `task_to_household`
-        UUID linkProfileId = (c.getAssigneeId() != null) ? c.getAssigneeId() : DEFAULT_PROFILE_ID;
+        UUID linkProfileId = (chosenAssigneeId != null) ? chosenAssigneeId : DEFAULT_PROFILE_ID;
         taskToHouseholdMapper.linkTaskToHousehold(UUID.randomUUID(), householdId, c.getId(), linkProfileId);
 
         // Return canonical view
-        Chore out = choreMapper.getChoreById(c.getId());
-        if (out != null) {
-            out.setHouseholdId(householdId);
+        return choreMapper.getChoreByHouseholdAndTaskId(householdId, c.getId());
+    }
+
+    public void completeChore(UUID householdId, UUID choreId) {
+        if (householdMapper.getHouseholdById(householdId) == null) {
+            throw new IllegalArgumentException("Household not found");
         }
-        return out;
+        if (choreId == null) {
+            throw new IllegalArgumentException("Chore id is required");
+        }
+
+        // Validate the chore is currently linked to this household and capture a profile id for scoring fallback.
+        UUID linkedProfileId = taskToHouseholdMapper.getLinkedProfileId(householdId, choreId);
+        if (linkedProfileId == null) {
+            throw new IllegalArgumentException("Chore not found");
+        }
+
+        // Load chore details for scoring.
+        Chore chore = choreMapper.getChoreById(choreId);
+        if (chore == null) {
+            throw new IllegalArgumentException("Chore not found");
+        }
+
+        int deleted = taskToHouseholdMapper.unlinkTaskFromHousehold(householdId, choreId);
+        if (deleted <= 0) {
+            throw new IllegalArgumentException("Chore not found");
+        }
+
+        // Update user score by the chore's impact (fixed amount per task).
+        int delta = chore.getImpact();
+        if (delta > 0) {
+            profileMapper.incrementUserScore(linkedProfileId, delta);
+        }
+    }
+
+    private UUID pickCycledAssignee(UUID householdId, CreateChoreRequest req) {
+        List<Profile> members = householdMemberMapper.getMembers(householdId);
+        if (members == null || members.isEmpty()) {
+            throw new IllegalArgumentException("No household members found to assign this chore");
+        }
+
+        String repeatRule = (req.getRepeatRule() == null) ? "never" : req.getRepeatRule().trim();
+        boolean rotationEligible = !repeatRule.equalsIgnoreCase("never");
+        boolean cycleEnabled = rotationEligible && Boolean.TRUE.equals(req.getRotateEnabled());
+
+        // Stable ordering: members are already ordered by first_name/last_name in SQL.
+        List<UUID> orderedAll = new ArrayList<>();
+        for (Profile p : members) {
+            if (p != null && p.getId() != null) {
+                orderedAll.add(p.getId());
+            }
+        }
+        if (orderedAll.isEmpty()) {
+            throw new IllegalArgumentException("No household members found to assign this chore");
+        }
+
+        // Non-repeating chore: user must pick a responsible roommate.
+        if (!rotationEligible) {
+            UUID requested = req.getAssigneeId();
+            if (requested == null) {
+                throw new IllegalArgumentException("Responsible roommate is required when repeat is set to never");
+            }
+            if (!orderedAll.contains(requested)) {
+                throw new IllegalArgumentException("Selected responsible roommate is not a member of this household");
+            }
+            return requested;
+        }
+
+        if (!cycleEnabled) {
+            return orderedAll.get(0);
+        }
+
+        List<UUID> candidatesOrdered = new ArrayList<>();
+        if (req.getRotateWithProfileIds() != null && !req.getRotateWithProfileIds().isEmpty()) {
+            Set<UUID> allow = new HashSet<>(req.getRotateWithProfileIds());
+            for (UUID id : orderedAll) {
+                if (allow.contains(id)) {
+                    candidatesOrdered.add(id);
+                }
+            }
+        } else {
+            candidatesOrdered.addAll(orderedAll);
+        }
+
+        if (candidatesOrdered.isEmpty()) {
+            throw new IllegalArgumentException("No eligible roommates found for cycling");
+        }
+
+        // Round-robin index based on how many matching chores already exist in this household.
+        // This gives a stable cycle without needing new DB columns.
+        String title = (req.getTitle() == null) ? "" : req.getTitle().trim();
+        List<Chore> existing = choreMapper.getChoresByHouseholdId(householdId);
+        Set<UUID> candidateSet = new HashSet<>(candidatesOrdered);
+        int alreadyAssignedCount = 0;
+        if (existing != null) {
+            for (Chore ch : existing) {
+                if (ch == null) continue;
+                if (ch.getTitle() == null) continue;
+                if (!ch.getTitle().trim().equalsIgnoreCase(title)) continue;
+                UUID aid = ch.getAssigneeId();
+                if (aid != null && candidateSet.contains(aid)) {
+                    alreadyAssignedCount++;
+                }
+            }
+        }
+
+        int idx = alreadyAssignedCount % candidatesOrdered.size();
+        return candidatesOrdered.get(idx);
     }
 }
 
