@@ -30,10 +30,27 @@ public interface ExpenseMapper {
     Expense getExpenseById(@Param("id") UUID id);
 
     @Select("""
-        SELECT * FROM public.expense 
+        SELECT
+            id,
+            household_id AS householdId,
+            profile_id AS profileId,
+            item,
+            cost,
+            score,
+            created_at AS createdAt
+        FROM public.expense 
         WHERE household_id = #{householdId}
+        ORDER BY created_at DESC
     """)
     List<Expense> getExpensesByHouseholdId(@Param("householdId") UUID householdId);
+
+    @Select("""
+        SELECT COALESCE(SUM(cost), 0)
+        FROM public.expense
+        WHERE household_id = #{householdId}
+        AND created_at >= date_trunc('month', CURRENT_DATE)
+    """)
+    float getMonthlyTotalByHousehold(@Param("householdId") UUID householdId);
 
     @Update("""
         UPDATE public.expense

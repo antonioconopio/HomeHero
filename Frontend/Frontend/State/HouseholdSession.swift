@@ -100,5 +100,15 @@ final class HouseholdSession: ObservableObject {
             UserDefaults.standard.removeObject(forKey: selectedHouseholdKey)
         }
     }
+
+    /// Clears all session data (call on logout)
+    func clear() {
+        me = nil
+        households = []
+        selectedHouseholdId = nil
+        invites = []
+        errorMessage = nil
+        UserDefaults.standard.removeObject(forKey: selectedHouseholdKey)
+    }
 }
 

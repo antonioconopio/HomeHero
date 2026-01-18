@@ -2,9 +2,11 @@ package com.HomeHero.demo.controller.HouseholdController;
 
 import com.HomeHero.demo.controller.HouseholdController.dto.AddHouseholdMemberRequest;
 import com.HomeHero.demo.controller.HouseholdController.dto.CreateHouseholdRequest;
+import com.HomeHero.demo.controller.HouseholdController.dto.InviteToHouseholdRequest;
 import com.HomeHero.demo.controller.HouseholdController.dto.JoinHouseholdRequest;
 import com.HomeHero.demo.model.Household;
 import com.HomeHero.demo.model.Profile;
+import com.HomeHero.demo.service.HouseholdInviteService;
 import com.HomeHero.demo.service.HouseholdService;
 import com.HomeHero.demo.util.CurrentUser;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -20,10 +22,12 @@ import java.util.UUID;
 public class HouseholdController {
 
     private final HouseholdService householdService;
+    private final HouseholdInviteService householdInviteService;
 
     @Autowired
-    public HouseholdController(HouseholdService householdService) {
+    public HouseholdController(HouseholdService householdService, HouseholdInviteService householdInviteService) {
         this.householdService = householdService;
+        this.householdInviteService = householdInviteService;
     }
 
     @GetMapping(value = "/households", produces = "application/json")
@@ -93,6 +97,36 @@ public class HouseholdController {
             householdService.addMember(householdId, req.getProfileId());
         } catch (Exception e) {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Could not add member");
+        }
+    }
+
+    @PostMapping(value = "/households/{householdId}/invite", consumes = "application/json")
+    public void inviteToHousehold(
+            @PathVariable UUID householdId,
+            @RequestHeader(value = "X-Profile-Id", required = false) String profileId,
+            @RequestBody InviteToHouseholdRequest req
+    ) {
+        if (req == null || req.getEmail() == null || req.getEmail().trim().isEmpty()) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "email is required");
+        }
+        try {
+            UUID inviterId = CurrentUser.resolveProfileId(profileId);
+            householdInviteService.inviteByEmail(householdId, inviterId, req.getEmail());
+        } catch (Exception e) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Could not send invite: " + e.getMessage());
+        }
+    }
+
+    @PostMapping(value = "/households/{householdId}/leave")
+    public void leaveHousehold(
+            @PathVariable UUID householdId,
+            @RequestHeader(value = "X-Profile-Id", required = false) String profileIdHeader
+    ) {
+        try {
+            UUID profileId = CurrentUser.resolveProfileId(profileIdHeader);
+            householdService.leaveHousehold(householdId, profileId);
+        } catch (Exception e) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Could not leave household: " + e.getMessage());
         }
     }
 }

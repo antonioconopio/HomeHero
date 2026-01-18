@@ -1,6 +1,7 @@
 package com.HomeHero.demo.persistance;
 
 import com.HomeHero.demo.model.Household;
+import org.apache.ibatis.annotations.Delete;
 import org.apache.ibatis.annotations.Insert;
 import org.apache.ibatis.annotations.Mapper;
 import org.apache.ibatis.annotations.Param;
@@ -74,5 +75,11 @@ public interface HouseholdMapper {
             ORDER BY h.created_at DESC
             """)
     List<Household> getHouseholdsForProfile(@Param("profileId") UUID profileId);
+
+    @Delete("""
+            DELETE FROM public.household
+            WHERE id = #{householdId}
+            """)
+    int deleteHousehold(@Param("householdId") UUID householdId);
 }
 
