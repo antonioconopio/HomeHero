@@ -223,11 +223,6 @@ final class HomeHeroAPI {
         var req = URLRequest(url: url)
         req.httpMethod = method
         req.setValue("application/json", forHTTPHeaderField: "Accept")
-        
-        // Auth: send Supabase access token to backend (JWT).
-        if let token = AuthenticationManager.shared.authToken, !token.isEmpty {
-            req.setValue("Bearer \(token)", forHTTPHeaderField: "Authorization")
-        }
         return req
     }
 

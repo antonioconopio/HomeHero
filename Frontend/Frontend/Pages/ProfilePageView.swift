@@ -292,7 +292,6 @@ struct ProfilePageView: View {
                 try await AuthenticationManager.shared.logout()
                 
                 await MainActor.run {
-                    householdSession.clear()
                     isLoggingOut = false
                     showSignedInView = true
                 }

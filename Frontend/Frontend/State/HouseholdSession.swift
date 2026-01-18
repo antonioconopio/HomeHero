@@ -23,15 +23,6 @@ final class HouseholdSession: ObservableObject {
             self.selectedHouseholdId = id
         }
     }
-    
-    func clear() {
-        me = nil
-        households = []
-        invites = []
-        errorMessage = nil
-        isLoading = false
-        selectHousehold(nil)
-    }
 
     func refresh() async {
         isLoading = true
@@ -39,8 +30,6 @@ final class HouseholdSession: ObservableObject {
         defer { isLoading = false }
 
         do {
-            // Ensure we have the latest Supabase session token before hitting the backend.
-            _ = try? await AuthenticationManager.shared.getAuthenticatedUser()
             let profile = try await HomeHeroAPI.shared.getProfile()
             self.me = profile
 

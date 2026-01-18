@@ -24,20 +24,7 @@ struct RootView: View {
             Task{
                 let authUser = try? await AuthenticationManager.shared.getAuthenticatedUser()
                 self.showSignedInView = authUser == nil
-                if authUser == nil {
-                    householdSession.clear()
-                } else {
-                    await householdSession.refresh()
-                }
-            }
-        }
-        .onChange(of: showSignedInView) { _, isShowingAuth in
-            Task {
-                if isShowingAuth {
-                    householdSession.clear()
-                } else {
-                    await householdSession.refresh()
-                }
+                await householdSession.refresh()
             }
         }
         .fullScreenCover(isPresented: $showSignedInView){
