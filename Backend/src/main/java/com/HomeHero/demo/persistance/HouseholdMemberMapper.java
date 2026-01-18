@@ -1,6 +1,7 @@
 package com.HomeHero.demo.persistance;
 
 import com.HomeHero.demo.model.Profile;
+import org.apache.ibatis.annotations.Delete;
 import org.apache.ibatis.annotations.Insert;
 import org.apache.ibatis.annotations.Mapper;
 import org.apache.ibatis.annotations.Param;
@@ -17,6 +18,19 @@ public interface HouseholdMemberMapper {
             VALUES (#{id}, #{householdId}, #{profileId})
             """)
     int addMember(@Param("id") UUID id, @Param("householdId") UUID householdId, @Param("profileId") UUID profileId);
+
+    @Delete("""
+            DELETE FROM public.profile_to_household
+            WHERE household_id = #{householdId} AND profile_id = #{profileId}
+            """)
+    int removeMember(@Param("householdId") UUID householdId, @Param("profileId") UUID profileId);
+
+    @Select("""
+            SELECT COUNT(*)
+            FROM public.profile_to_household
+            WHERE household_id = #{householdId}
+            """)
+    int countMembers(@Param("householdId") UUID householdId);
 
     @Select("""
             SELECT p.*

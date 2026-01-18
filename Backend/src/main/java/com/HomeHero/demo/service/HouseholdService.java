@@ -6,6 +6,7 @@ import com.HomeHero.demo.persistance.HouseholdMapper;
 import com.HomeHero.demo.persistance.HouseholdMemberMapper;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.concurrent.ThreadLocalRandom;
 import java.util.List;
@@ -99,6 +100,19 @@ public class HouseholdService {
 
     public List<Profile> getMembers(UUID householdId) {
         return householdMemberMapper.getMembers(householdId);
+    }
+
+    @Transactional
+    public void leaveHousehold(UUID householdId, UUID profileId) {
+        // Remove the member
+        householdMemberMapper.removeMember(householdId, profileId);
+
+        // Check if household is now empty
+        int remainingMembers = householdMemberMapper.countMembers(householdId);
+        if (remainingMembers == 0) {
+            // Auto-delete the household if no members left
+            householdMapper.deleteHousehold(householdId);
+        }
     }
 
     private String generateUniqueHomeCode() {

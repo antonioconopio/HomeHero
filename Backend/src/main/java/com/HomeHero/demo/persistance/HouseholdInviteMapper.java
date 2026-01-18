@@ -5,6 +5,7 @@ import org.apache.ibatis.annotations.Insert;
 import org.apache.ibatis.annotations.Mapper;
 import org.apache.ibatis.annotations.Param;
 import org.apache.ibatis.annotations.Select;
+import org.apache.ibatis.annotations.Update;
 
 import java.util.List;
 import java.util.UUID;
@@ -31,8 +32,24 @@ public interface HouseholdInviteMapper {
                  OR (hi.invitee_email IS NOT NULL AND lower(hi.invitee_email) = lower(#{email}))
                   )
               AND hi.inviter_profile_id <> #{profileId}
+              AND (hi.status IS NULL OR hi.status = 'pending')
             ORDER BY hi.created_at DESC
             """)
     List<HouseholdInvite> getInvitesForProfile(@Param("profileId") UUID profileId, @Param("email") String email);
+
+    @Select("""
+            SELECT hi.*, h.address AS household_address
+            FROM public.household_invite hi
+            JOIN public.household h ON h.id = hi.household_id
+            WHERE hi.id = #{inviteId}
+            """)
+    HouseholdInvite getInviteById(@Param("inviteId") UUID inviteId);
+
+    @Update("""
+            UPDATE public.household_invite
+            SET status = #{status}
+            WHERE id = #{inviteId}
+            """)
+    int updateInviteStatus(@Param("inviteId") UUID inviteId, @Param("status") String status);
 }
 

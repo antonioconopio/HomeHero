@@ -43,11 +43,12 @@ struct TasksPageView: View {
                     }
                 }
             }
-            .navigationTitle("Tasks")
             .navigationBarTitleDisplayMode(.inline)
             .toolbarBackground(AppColor.dropBackground.opacity(0.8), for: .navigationBar)
             .toolbarBackground(.visible, for: .navigationBar)
             .toolbar {
+                HouseholdSelectorToolbarItem()
+                
                 ToolbarItem(placement: .topBarTrailing) {
                     Button {
                         showCreateChore = true

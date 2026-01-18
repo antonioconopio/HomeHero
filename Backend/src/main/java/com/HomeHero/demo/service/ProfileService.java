@@ -33,4 +33,8 @@ public class ProfileService {
         if (q.isEmpty()) return List.of();
         return profileMapper.searchProfilesByEmail(q);
     }
+
+    public void updateProfile(UUID profileId, String firstName, String lastName) {
+        profileMapper.updateProfile(profileId, firstName, lastName);
+    }
 }

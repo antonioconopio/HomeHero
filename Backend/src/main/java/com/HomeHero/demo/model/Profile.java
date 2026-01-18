@@ -14,6 +14,8 @@ public class Profile {
     private String last_name;
     private String email;
     private String phone_number;
+    private float amountOwed;
+    private float amountOwedToUser;
 
     public Profile() {}
 
@@ -67,5 +69,21 @@ public class Profile {
 
     public void setPhoneNumber(String phone_number) {
         this.phone_number = phone_number;
+    }
+
+    public float getAmountOwed() {
+        return amountOwed;
+    }
+
+    public void setAmountOwed(float amountOwed) {
+        this.amountOwed = amountOwed;
+    }
+
+    public float getAmountOwedToUser() {
+        return amountOwedToUser;
+    }
+
+    public void setAmountOwedToUser(float amountOwedToUser) {
+        this.amountOwedToUser = amountOwedToUser;
     }
 }
