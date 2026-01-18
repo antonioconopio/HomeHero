@@ -35,7 +35,7 @@ public class SecurityConfig {
                         .requestMatchers(
                                 "/api/v1/auth/**"
                         ).permitAll()
-//                        .requestMatchers("/api/v1/**").authenticated()
+                        // DEV MODE: no auth enforced
                         .anyRequest().permitAll()
                 )
                 .addFilterBefore(jwtFilter, UsernamePasswordAuthenticationFilter.class);

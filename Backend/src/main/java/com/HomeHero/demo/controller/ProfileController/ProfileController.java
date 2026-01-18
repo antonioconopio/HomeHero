@@ -8,10 +8,12 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.RequestHeader;
 import org.springframework.web.bind.annotation.RestController;
 import com.HomeHero.demo.util.CurrentUser;
 
 import java.util.List;
+import java.util.UUID;
 
 @RestController
 @RequestMapping("/api/v1")
@@ -27,8 +29,11 @@ public class ProfileController {
     }
 
     @GetMapping(value = "/getProfile", produces = "application/json")
-    public Profile getProfile() {
-        return profileService.getProfileById(CurrentUser.PROFILE_ID);
+    public Profile getProfile(
+            @RequestHeader(value = "X-Profile-Id", required = false) String profileId
+    ) {
+        UUID id = CurrentUser.resolveProfileId(profileId);
+        return profileService.getProfileById(id);
     }
 
     @GetMapping(value = "/profiles/search", produces = "application/json")
@@ -37,9 +42,12 @@ public class ProfileController {
     }
 
     @GetMapping(value = "/my/invites", produces = "application/json")
-    public List<HouseholdInvite> getMyInvites() {
-        Profile me = profileService.getProfileById(CurrentUser.PROFILE_ID);
+    public List<HouseholdInvite> getMyInvites(
+            @RequestHeader(value = "X-Profile-Id", required = false) String profileId
+    ) {
+        UUID id = CurrentUser.resolveProfileId(profileId);
+        Profile me = profileService.getProfileById(id);
         String email = me == null ? null : me.getEmail();
-        return householdInviteService.getInvitesForProfile(CurrentUser.PROFILE_ID, email);
+        return householdInviteService.getInvitesForProfile(id, email);
     }
 }
