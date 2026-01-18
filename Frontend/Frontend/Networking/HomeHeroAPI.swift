@@ -163,6 +163,14 @@ final class HomeHeroAPI {
         let score: Int
         let profileIds: [UUID]?
     }
+    
+    struct Grocery: Codable, Identifiable {
+        let id: UUID?
+        let householdId: UUID?
+        let name: String
+        let store: String?
+        let price: Double?
+    }
 
     // MARK: - Public API
 
@@ -341,6 +349,42 @@ final class HomeHeroAPI {
         let url = try buildURL(path: "/invites/\(inviteId.uuidString)/decline")
         let req = makeRequest(url: url, method: "POST")
         _ = try await send(req, as: EmptyResponse.self)
+    }
+    
+    // MARK: - Grocery API
+    
+    func getGroceries(householdId: UUID) async throws -> [Grocery] {
+        let url = try buildURL(path: "/getGrocery")
+        let req = makeRequest(url: url, method: "GET")
+        return try await send(req, as: [Grocery].self)
+    }
+
+    func insertGrocery(_ grocery: Grocery) async throws -> Grocery {
+        let url = try buildURL(path: "/insertGrocery")
+        
+        let data = try JSONEncoder().encode(grocery)
+        let req = makeRequest(url: url, method: "POST")
+        
+        return try await send(req, as: Grocery.self)
+    }
+
+    func deleteGrocery(_ grocery: Grocery) async throws -> Grocery {
+        let url = try buildURL(path: "/deleteGrocery")
+        
+        let data = try JSONEncoder().encode(grocery)
+        let req = makeRequest(url: url, method: "DELETE")
+        
+        return try await send(req, as: Grocery.self)
+    }
+
+    
+    func updateGrocery(_ grocery: Grocery) async throws -> Grocery {
+        let url = try buildURL(path: "/updateGrocery")
+        
+        let data = try JSONEncoder().encode(grocery)
+        let req = makeRequest(url: url, method: "PUT")
+        
+        return try await send(req, as: Grocery.self)
     }
 
     // MARK: - Helpers

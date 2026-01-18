@@ -294,7 +294,7 @@ struct ExpensesPageView: View {
     private func formatCurrency(_ amount: Float) -> String {
         let formatter = NumberFormatter()
         formatter.numberStyle = .currency
-        formatter.currencyCode = "USD"
+//        formatter.currencyCode = "USD"
         return formatter.string(from: NSNumber(value: amount)) ?? "$0.00"
     }
     
@@ -766,7 +766,7 @@ struct CreateExpenseSheet: View {
     private func formatCurrency(_ amount: Float) -> String {
         let formatter = NumberFormatter()
         formatter.numberStyle = .currency
-        formatter.currencyCode = "USD"
+//        formatter.currencyCode = "USD"
         return formatter.string(from: NSNumber(value: amount)) ?? "$0.00"
     }
 }
@@ -1065,7 +1065,7 @@ struct ExpenseDetailSheet: View {
     private func formatCurrency(_ amount: Float) -> String {
         let formatter = NumberFormatter()
         formatter.numberStyle = .currency
-        formatter.currencyCode = "USD"
+//        formatter.currencyCode = "USD"
         return formatter.string(from: NSNumber(value: amount)) ?? "$0.00"
     }
     
