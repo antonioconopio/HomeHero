@@ -7,7 +7,6 @@ public class Grocery {
     private UUID id;
     private UUID profile_id;
     private String grocery_name;
-    private float grocery_cost;
     private OffsetDateTime created_at;
     private UUID household_id;
 
@@ -21,9 +20,6 @@ public class Grocery {
 
     public String getGrocery_name() { return grocery_name; }
     public void setGrocery_name(String grocery_name) { this.grocery_name = grocery_name; }
-
-    public float getGrocery_cost() { return grocery_cost; }
-    public void setGrocery_cost(float grocery_cost) { this.grocery_cost = grocery_cost; }
 
     public OffsetDateTime getCreated_at() { return created_at; }
     public void setCreated_at(OffsetDateTime created_at) { this.created_at = created_at; }

@@ -45,8 +45,8 @@ class AuthenticationManager: ObservableObject {
     
     @Published var authToken: String? = nil
 
-    // DEV MODE: Persist the "logged in" profile UUID in UserDefaults.
-    // This is not secure and is meant only for rapid prototyping.
+    // NOTE: This is intentionally simple and uses UserDefaults (per current project direction).
+    // In production, auth/session identifiers should be stored securely (ex: Keychain) and validated by the backend.
     private let profileIdKey = "logged_in_profile_id"
 
     func getPersistedProfileId() -> UUID? {
@@ -102,8 +102,8 @@ class AuthenticationManager: ObservableObject {
         await MainActor.run {
             self.authToken = session.accessToken
         }
-        
-        // DEV MODE: Use Supabase user id as our backend profile id.
+
+        // Persist "logged in" identifier for backend calls.
         persistProfileId(session.user.id)
         
         print("signed up! \(session.user)")
@@ -120,8 +120,8 @@ class AuthenticationManager: ObservableObject {
         await MainActor.run {
             self.authToken = session.accessToken
         }
-        
-        // DEV MODE: Use Supabase user id as our backend profile id.
+
+        // Persist "logged in" identifier for backend calls.
         persistProfileId(session.user.id)
         
         

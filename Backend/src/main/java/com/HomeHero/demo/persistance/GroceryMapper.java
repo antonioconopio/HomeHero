@@ -11,6 +11,13 @@ import java.util.UUID;
 public interface GroceryMapper {
 
     @Select("SELECT * FROM public.grocery WHERE household_id = #{household_id}")
+    @Results({
+        @Result(property = "id", column = "id"),
+        @Result(property = "profile_id", column = "profile_id"),
+        @Result(property = "grocery_name", column = "grocery_name"),
+        @Result(property = "created_at", column = "created_at"),
+        @Result(property = "household_id", column = "household_id")
+    })
     List<Grocery> getGroceryByID(@Param("household_id") UUID household_id);
 
     @Insert("""
@@ -18,7 +25,6 @@ public interface GroceryMapper {
             id,
             profile_id,
             grocery_name,
-            grocery_cost,
             created_at,
             household_id
         )
@@ -26,7 +32,6 @@ public interface GroceryMapper {
             #{id},
             #{profile_id},
             #{grocery_name},
-            #{grocery_cost},
             #{created_at},
             #{household_id}
         )
@@ -39,11 +44,7 @@ public interface GroceryMapper {
     @Update("""
         UPDATE public.grocery
         SET
-            profile_id = #{grocery.profile_id},
-            grocery_name = #{grocery.grocery_name},
-            grocery_cost = #{grocery.grocery_cost},
-            created_at = #{grocery.created_at},
-            household_id = #{grocery.household_id}
+            grocery_name = #{grocery.grocery_name}
         WHERE id = #{grocery.id}
     """)
     void updateGrocery(@Param("grocery") Grocery grocery);

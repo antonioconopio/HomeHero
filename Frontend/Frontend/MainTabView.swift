@@ -15,6 +15,7 @@ struct MainTabView: View {
     enum Tab: String, CaseIterable {
         case home = "Home"
         case tasks = "Tasks"
+        case shopping = "Shopping"
         case expenses = "Expenses"
         case profile = "Profile"
         
@@ -22,6 +23,7 @@ struct MainTabView: View {
             switch self {
             case .home: return "house.fill"
             case .tasks: return "checklist"
+            case .shopping: return "cart.fill"
             case .expenses: return "dollarsign.circle.fill"
             case .profile: return "person.fill"
             }
@@ -31,8 +33,9 @@ struct MainTabView: View {
             switch self {
             case .home: return [AppColor.accentTeal, AppColor.accentSky]
             case .tasks: return [AppColor.accentAmber, AppColor.accentCoral]
-            case .expenses: return [AppColor.accentMint, AppColor.accentTeal]
-            case .profile: return [AppColor.accentLavender, AppColor.powderBlue]
+            case .shopping: return [AppColor.accentMint, AppColor.accentTeal]
+            case .expenses: return [AppColor.accentLavender, AppColor.powderBlue]
+            case .profile: return [AppColor.accentSky, AppColor.accentTeal]
             }
         }
     }
@@ -47,6 +50,8 @@ struct MainTabView: View {
                         HomePageView()
                     case .tasks:
                         TasksPageView()
+                    case .shopping:
+                        ShoppingListPageView()
                     case .expenses:
                         ExpensesPageView()
                     case .profile:

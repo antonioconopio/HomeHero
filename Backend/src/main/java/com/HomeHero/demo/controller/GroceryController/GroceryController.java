@@ -2,10 +2,12 @@ package com.HomeHero.demo.controller.GroceryController;
 
 import com.HomeHero.demo.model.Grocery;
 import com.HomeHero.demo.service.grocery.GroceryService;
+import com.HomeHero.demo.util.CurrentUser;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import java.util.List;
@@ -16,23 +18,23 @@ import java.util.UUID;
 public class GroceryController {
 
     private final GroceryService groceryService;
+    private final CurrentUser currentUser;
 
     @Autowired
-    public GroceryController(GroceryService groceryService) {
+    public GroceryController(GroceryService groceryService, CurrentUser currentUser) {
         this.groceryService = groceryService;
+        this.currentUser = currentUser;
     }
 
     @RequestMapping(value = "/getGrocery", produces = "application/json", method = RequestMethod.GET)
-    public List<Grocery> getGrocery(String household_id) {
-        //String userId = (String) authentication.getPrincipal();
-
-        return groceryService.getGroceries("5ca95d0d-e4f9-4957-9092-bb8f76643932");
+    public List<Grocery> getGrocery(@RequestParam String household_id) {
+        return groceryService.getGroceries(household_id);
     }
 
     @RequestMapping(value = "/insertGrocery", produces = "application/json", consumes = "application/json", method = RequestMethod.POST)
     public Grocery insertGrocery(@RequestBody Grocery grocery) {
-        //String userId = (String) authentication.getPrincipal();
-
+        UUID profileId = currentUser.getProfileId();
+        grocery.setProfile_id(profileId);
         return groceryService.insertGrocery(grocery);
     }
 

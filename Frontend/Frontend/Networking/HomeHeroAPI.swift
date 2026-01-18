@@ -164,12 +164,47 @@ final class HomeHeroAPI {
         let profileIds: [UUID]?
     }
     
-    struct Grocery: Codable, Identifiable {
+    struct Grocery: Codable, Identifiable, Hashable {
         let id: UUID?
+        let profileId: UUID?
+        let groceryName: String?
+        let createdAt: String?  // Keep as String to avoid date parsing issues
         let householdId: UUID?
-        let name: String
-        let store: String?
-        let price: Double?
+        
+        // Computed property for display
+        var displayName: String {
+            groceryName ?? "Unnamed Item"
+        }
+        
+        enum CodingKeys: String, CodingKey {
+            case id
+            case profileId = "profile_id"
+            case groceryName = "grocery_name"
+            case createdAt = "created_at"
+            case householdId = "household_id"
+        }
+    }
+    
+    struct CreateGroceryRequest: Codable {
+        let groceryName: String
+        let householdId: UUID
+        
+        enum CodingKeys: String, CodingKey {
+            case groceryName = "grocery_name"
+            case householdId = "household_id"
+        }
+    }
+    
+    struct UpdateGroceryRequest: Codable {
+        let id: UUID
+        let groceryName: String
+        let householdId: UUID
+        
+        enum CodingKeys: String, CodingKey {
+            case id
+            case groceryName = "grocery_name"
+            case householdId = "household_id"
+        }
     }
 
     // MARK: - Public API
@@ -354,36 +389,28 @@ final class HomeHeroAPI {
     // MARK: - Grocery API
     
     func getGroceries(householdId: UUID) async throws -> [Grocery] {
-        let url = try buildURL(path: "/getGrocery")
+        let url = try buildURL(path: "/getGrocery?household_id=\(householdId.uuidString)")
         let req = makeRequest(url: url, method: "GET")
         return try await send(req, as: [Grocery].self)
     }
 
-    func insertGrocery(_ grocery: Grocery) async throws -> Grocery {
+    func createGrocery(householdId: UUID, name: String) async throws -> Grocery {
         let url = try buildURL(path: "/insertGrocery")
-        
-        let data = try JSONEncoder().encode(grocery)
-        let req = makeRequest(url: url, method: "POST")
-        
+        let body = CreateGroceryRequest(groceryName: name, householdId: householdId)
+        let req = try makeJSONRequest(url: url, method: "POST", body: body)
         return try await send(req, as: Grocery.self)
     }
 
     func deleteGrocery(_ grocery: Grocery) async throws -> Grocery {
         let url = try buildURL(path: "/deleteGrocery")
-        
-        let data = try JSONEncoder().encode(grocery)
-        let req = makeRequest(url: url, method: "DELETE")
-        
+        let req = try makeJSONRequest(url: url, method: "DELETE", body: grocery)
         return try await send(req, as: Grocery.self)
     }
-
     
-    func updateGrocery(_ grocery: Grocery) async throws -> Grocery {
+    func updateGrocery(id: UUID, householdId: UUID, name: String) async throws -> Grocery {
         let url = try buildURL(path: "/updateGrocery")
-        
-        let data = try JSONEncoder().encode(grocery)
-        let req = makeRequest(url: url, method: "PUT")
-        
+        let body = UpdateGroceryRequest(id: id, groceryName: name, householdId: householdId)
+        let req = try makeJSONRequest(url: url, method: "PUT", body: body)
         return try await send(req, as: Grocery.self)
     }
 

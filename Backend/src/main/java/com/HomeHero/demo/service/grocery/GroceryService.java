@@ -5,6 +5,7 @@ import com.HomeHero.demo.model.GroceryToHousehold;
 import com.HomeHero.demo.persistance.GroceryMapper;
 import org.springframework.stereotype.Service;
 
+import java.time.OffsetDateTime;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
@@ -24,6 +25,7 @@ public class GroceryService {
 
     public Grocery insertGrocery(Grocery grocery) {
         grocery.setId(UUID.randomUUID());
+        grocery.setCreated_at(OffsetDateTime.now());
         groceryMapper.insertGrocery(grocery);
         return grocery;
     }
