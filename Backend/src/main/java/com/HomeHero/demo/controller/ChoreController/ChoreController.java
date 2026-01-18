@@ -37,5 +37,17 @@ public class ChoreController {
             throw new ResponseStatusException(status, msg);
         }
     }
+
+    @PostMapping(value = "/households/{householdId}/chores/{choreId}/complete")
+    @ResponseStatus(HttpStatus.NO_CONTENT)
+    public void completeChore(@PathVariable UUID householdId, @PathVariable UUID choreId) {
+        try {
+            choreService.completeChore(householdId, choreId);
+        } catch (IllegalArgumentException e) {
+            String msg = e.getMessage() == null ? "Invalid request" : e.getMessage();
+            HttpStatus status = msg.toLowerCase().contains("not found") ? HttpStatus.NOT_FOUND : HttpStatus.BAD_REQUEST;
+            throw new ResponseStatusException(status, msg);
+        }
+    }
 }
 
