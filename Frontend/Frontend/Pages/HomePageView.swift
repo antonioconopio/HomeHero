@@ -8,51 +8,58 @@
 import SwiftUI
 
 struct HomePageView: View {
+    @EnvironmentObject private var householdSession: HouseholdSession
+
     var body: some View {
         NavigationStack {
-            ZStack {
-                AppColor.mintCream.ignoresSafeArea()
-                
-                VStack(spacing: 24) {
-                    Image(systemName: "house.fill")
-                        .font(.system(size: 60))
-                        .foregroundStyle(AppColor.oxfordNavy)
-                    
-                    Text("Welcome to HomeHero")
-                        .font(.system(size: 32, weight: .bold, design: .rounded))
-                        .foregroundStyle(AppColor.oxfordNavy)
-                    
-                    Text("Your shared living dashboard")
-                        .font(.system(size: 17, design: .rounded))
-                        .foregroundStyle(AppColor.prussianBlue.opacity(0.70))
-                    
-                    Spacer()
-                        .frame(height: 40)
-                    
-                    VStack(alignment: .leading, spacing: 16) {
-                        PlaceholderCard(
-                            icon: "bell.fill",
-                            title: "Notifications",
-                            subtitle: "Stay updated with house activities"
-                        )
-                        
-                        PlaceholderCard(
-                            icon: "calendar",
-                            title: "Upcoming Tasks",
-                            subtitle: "See what's due this week"
-                        )
-                        
-                        PlaceholderCard(
-                            icon: "chart.bar.fill",
-                            title: "Recent Expenses",
-                            subtitle: "Track shared costs"
-                        )
+            HouseholdGateView(
+                title: "Join or create a household",
+                subtitle: "To start using HomeHero, join a household or create one and invite your roommates."
+            ) {
+                ZStack {
+                    AppColor.mintCream.ignoresSafeArea()
+
+                    VStack(spacing: 18) {
+                        Image(systemName: "house.fill")
+                            .font(.system(size: 56))
+                            .foregroundStyle(AppColor.oxfordNavy)
+
+                        Text(householdSession.selectedHousehold?.name ?? "Home")
+                            .font(.system(size: 28, weight: .bold, design: .rounded))
+                            .foregroundStyle(AppColor.oxfordNavy)
+
+                        Text("Your shared living dashboard")
+                            .font(.system(size: 16, design: .rounded))
+                            .foregroundStyle(AppColor.prussianBlue.opacity(0.70))
+
+                        Spacer()
+                            .frame(height: 18)
+
+                        VStack(alignment: .leading, spacing: 16) {
+                            PlaceholderCard(
+                                icon: "bell.fill",
+                                title: "Notifications",
+                                subtitle: "Stay updated with house activities"
+                            )
+
+                            PlaceholderCard(
+                                icon: "calendar",
+                                title: "Upcoming Tasks",
+                                subtitle: "See what's due this week"
+                            )
+
+                            PlaceholderCard(
+                                icon: "chart.bar.fill",
+                                title: "Recent Expenses",
+                                subtitle: "Track shared costs"
+                            )
+                        }
+                        .padding(.horizontal)
+
+                        Spacer()
                     }
-                    .padding(.horizontal)
-                    
-                    Spacer()
+                    .padding(.top, 24)
                 }
-                .padding(.top, 40)
             }
             .navigationTitle("Home")
             .navigationBarTitleDisplayMode(.inline)

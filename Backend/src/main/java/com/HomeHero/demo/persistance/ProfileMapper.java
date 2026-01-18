@@ -16,4 +16,21 @@ public interface ProfileMapper {
 
     @Select("SELECT * FROM public.profiles WHERE id = #{id}")
     Profile getProfileById(@Param("id") UUID id);
+
+    @Select("""
+            SELECT *
+            FROM public.profiles
+            WHERE lower(email) = lower(#{email})
+            LIMIT 1
+            """)
+    Profile getProfileByEmail(@Param("email") String email);
+
+    @Select("""
+            SELECT *
+            FROM public.profiles
+            WHERE email ILIKE CONCAT('%', #{email}, '%')
+            ORDER BY email ASC
+            LIMIT 10
+            """)
+    List<Profile> searchProfilesByEmail(@Param("email") String email);
 }
