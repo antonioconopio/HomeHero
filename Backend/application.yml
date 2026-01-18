@@ -1,0 +1,12 @@
+spring:
+  ai:
+    openai:
+      api-key: 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
+      base-url: https://openrouter.ai/api/v1
+      chat:
+        options:
+          model: google/gemini-2.5-flash-lite
+
+openrouter:
+  api:
+    key: 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
