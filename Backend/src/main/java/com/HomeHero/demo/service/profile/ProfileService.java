@@ -1,4 +1,4 @@
-package com.HomeHero.demo.service;
+package com.HomeHero.demo.service.profile;
 
 import com.HomeHero.demo.model.Profile;
 import com.HomeHero.demo.persistance.ProfileMapper;
