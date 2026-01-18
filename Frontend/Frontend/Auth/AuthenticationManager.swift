@@ -52,6 +52,11 @@ class AuthenticationManager: ObservableObject {
     
     func getAuthenticatedUser() async throws -> AppUser {
         let session = try await supabase.auth.session
+        
+        // Keep our app-level token in sync with Supabase session.
+        await MainActor.run {
+            self.authToken = session.accessToken
+        }
         return AppUser(session: session)
         
     }
@@ -121,5 +126,8 @@ class AuthenticationManager: ObservableObject {
     
     func logout() async throws {
         try await supabase.auth.signOut()
+        await MainActor.run {
+            self.authToken = nil
+        }
     }
 }

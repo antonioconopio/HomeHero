@@ -8,51 +8,56 @@
 import SwiftUI
 
 struct ExpensesPageView: View {
+    @EnvironmentObject private var householdSession: HouseholdSession
+
     var body: some View {
         NavigationStack {
-            ZStack {
-                AppColor.mintCream.ignoresSafeArea()
-                
-                VStack(spacing: 24) {
-                    Image(systemName: "dollarsign.circle.fill")
-                        .font(.system(size: 60))
-                        .foregroundStyle(AppColor.oxfordNavy)
-                    
-                    Text("Expenses")
-                        .font(.system(size: 32, weight: .bold, design: .rounded))
-                        .foregroundStyle(AppColor.oxfordNavy)
-                    
-                    Text("Track and split household expenses")
-                        .font(.system(size: 17, design: .rounded))
-                        .foregroundStyle(AppColor.prussianBlue.opacity(0.70))
-                        .multilineTextAlignment(.center)
+            HouseholdGateView(
+                title: "Join or create a household",
+                subtitle: "Expenses are household-specific. Join or create a household to begin."
+            ) {
+                ZStack {
+                    AppColor.mintCream.ignoresSafeArea()
+
+                    VStack(spacing: 20) {
+                        Image(systemName: "dollarsign.circle.fill")
+                            .font(.system(size: 56))
+                            .foregroundStyle(AppColor.oxfordNavy)
+
+                        Text("Expenses")
+                            .font(.system(size: 28, weight: .bold, design: .rounded))
+                            .foregroundStyle(AppColor.oxfordNavy)
+
+                        Text(householdSession.selectedHousehold?.name ?? "")
+                            .font(.system(size: 15, design: .rounded))
+                            .foregroundStyle(AppColor.prussianBlue.opacity(0.70))
+
+                        Spacer()
+                            .frame(height: 24)
+
+                        VStack(spacing: 12) {
+                            ExpensePlaceholderRow(
+                                title: "Rent",
+                                amount: "$1,200",
+                                date: "Jan 1"
+                            )
+                            ExpensePlaceholderRow(
+                                title: "Utilities",
+                                amount: "$150",
+                                date: "Jan 5"
+                            )
+                            ExpensePlaceholderRow(
+                                title: "Groceries",
+                                amount: "$85",
+                                date: "Jan 12"
+                            )
+                        }
                         .padding(.horizontal)
-                    
-                    Spacer()
-                        .frame(height: 40)
-                    
-                    VStack(spacing: 12) {
-                        ExpensePlaceholderRow(
-                            title: "Rent",
-                            amount: "$1,200",
-                            date: "Jan 1"
-                        )
-                        ExpensePlaceholderRow(
-                            title: "Utilities",
-                            amount: "$150",
-                            date: "Jan 5"
-                        )
-                        ExpensePlaceholderRow(
-                            title: "Groceries",
-                            amount: "$85",
-                            date: "Jan 12"
-                        )
+
+                        Spacer()
                     }
-                    .padding(.horizontal)
-                    
-                    Spacer()
+                    .padding(.top, 24)
                 }
-                .padding(.top, 40)
             }
             .navigationTitle("Expenses")
             .navigationBarTitleDisplayMode(.inline)
