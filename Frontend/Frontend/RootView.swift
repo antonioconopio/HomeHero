@@ -22,8 +22,8 @@ struct RootView: View {
         }
         .onAppear{
             Task{
-                let authUser = try? await AuthenticationManager.shared.getAuthenticatedUser()
-                self.showSignedInView = authUser == nil
+                // DEV MODE: rely on persisted profile id.
+                self.showSignedInView = (AuthenticationManager.shared.getPersistedProfileId() == nil)
                 await householdSession.refresh()
             }
         }

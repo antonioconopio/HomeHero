@@ -32,8 +32,11 @@ public class HouseholdController {
     }
 
     @GetMapping(value = "/my/households", produces = "application/json")
-    public List<Household> getMyHouseholds() {
-        return householdService.getHouseholdsForProfile(CurrentUser.PROFILE_ID);
+    public List<Household> getMyHouseholds(
+            @RequestHeader(value = "X-Profile-Id", required = false) String profileId
+    ) {
+        UUID id = CurrentUser.resolveProfileId(profileId);
+        return householdService.getHouseholdsForProfile(id);
     }
 
     @GetMapping(value = "/households/{householdId}", produces = "application/json")
@@ -46,10 +49,14 @@ public class HouseholdController {
     }
 
     @PostMapping(value = "/households", consumes = "application/json", produces = "application/json")
-    public Household createHousehold(@RequestBody CreateHouseholdRequest req) {
+    public Household createHousehold(
+            @RequestHeader(value = "X-Profile-Id", required = false) String profileId,
+            @RequestBody CreateHouseholdRequest req
+    ) {
         try {
+            UUID id = CurrentUser.resolveProfileId(profileId);
             return householdService.createHouseholdAndInvite(
-                    CurrentUser.PROFILE_ID,
+                    id,
                     req == null ? null : req.getName(),
                     req == null ? null : req.getAddress(),
                     req == null ? null : req.getRoommateEmails()
@@ -60,9 +67,13 @@ public class HouseholdController {
     }
 
     @PostMapping(value = "/households/join", consumes = "application/json", produces = "application/json")
-    public Household joinHousehold(@RequestBody JoinHouseholdRequest req) {
+    public Household joinHousehold(
+            @RequestHeader(value = "X-Profile-Id", required = false) String profileId,
+            @RequestBody JoinHouseholdRequest req
+    ) {
         try {
-            return householdService.joinHouseholdByHomeCode(CurrentUser.PROFILE_ID, req == null ? null : req.getHomeCode());
+            UUID id = CurrentUser.resolveProfileId(profileId);
+            return householdService.joinHouseholdByHomeCode(id, req == null ? null : req.getHomeCode());
         } catch (IllegalArgumentException e) {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, e.getMessage());
         }

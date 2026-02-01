@@ -28,6 +28,8 @@ final class HomeHeroAPI {
 
     // NOTE: If running on a physical iPhone, replace localhost with your Mac's LAN IP.
     private let baseURLString = "http://localhost:8080/homeHero/api/v1"
+    private let profileIdDefaultsKey = "logged_in_profile_id"
+    private let profileIdHeaderName = "X-Profile-Id"
 
     private let session: URLSession
     private let decoder: JSONDecoder
@@ -223,6 +225,11 @@ final class HomeHeroAPI {
         var req = URLRequest(url: url)
         req.httpMethod = method
         req.setValue("application/json", forHTTPHeaderField: "Accept")
+
+        // DEV MODE identity propagation.
+        if let profileId = UserDefaults.standard.string(forKey: profileIdDefaultsKey) {
+            req.setValue(profileId, forHTTPHeaderField: profileIdHeaderName)
+        }
         return req
     }
 

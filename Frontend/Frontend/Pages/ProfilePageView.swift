@@ -14,6 +14,7 @@ struct ProfilePageView: View {
     @State private var isLoggingOut = false
     @State private var showLogoutError = false
     @State private var errorMessage = ""
+    @State private var authEmail: String?
 
     @State private var showCreateHousehold = false
     @State private var showJoinPlaceholder = false
@@ -267,6 +268,8 @@ struct ProfilePageView: View {
             .navigationBarTitleDisplayMode(.inline)
             .task {
                 await householdSession.refresh()
+                // Fallback email (in case backend profile email is empty)
+                authEmail = try? await AuthenticationManager.shared.getAuthenticatedUser().email
             }
             .alert("Logout Error", isPresented: $showLogoutError) {
                 Button("OK", role: .cancel) { }
@@ -313,8 +316,11 @@ struct ProfilePageView: View {
     }
 
     private var displayEmail: String {
-        let email = householdSession.me?.email?.trimmingCharacters(in: .whitespacesAndNewlines) ?? ""
-        return email.isEmpty ? "Manage your account settings" : email
+        let backendEmail = householdSession.me?.email?.trimmingCharacters(in: .whitespacesAndNewlines) ?? ""
+        if !backendEmail.isEmpty { return backendEmail }
+
+        let supabaseEmail = (authEmail ?? "").trimmingCharacters(in: .whitespacesAndNewlines)
+        return supabaseEmail.isEmpty ? "Manage your account settings" : supabaseEmail
     }
 }
 
